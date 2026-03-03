@@ -193,6 +193,7 @@ const Example = () => {
         // Banner image behind all column headers
         backgroundImage: `url(${bannerImg})`,
         backgroundSize: 'cover',
+        
         backgroundPosition: 'center',
         position: 'relative',
         '&::after': {
@@ -213,13 +214,18 @@ const Example = () => {
 
      muiTableHeadCellProps: {
       sx: {
+        backgroundColor: 'transparent !important',
+        '&[data-pinned="true"]': {
+      backgroundColor: 'transparent !important',
+      backdropFilter: 'none',
+    },
         color: '#ffffff',
         fontWeight: 700,
         fontSize: '0.8rem',
         letterSpacing: '0.06em',
         textTransform: 'uppercase',
         borderBottom: '1px solid rgba(255,255,255,0.12)',
-        backgroundColor: 'transparent',
+   
         py: 1.8,
         // Sort label
         '& .MuiTableSortLabel-root':            { color: '#fff !important' },
