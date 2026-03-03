@@ -124,10 +124,21 @@ const Example = () => {
     // Disable unused features for faster rendering
     enableColumnOrdering: false,
     enableGrouping: false,
-    enableColumnPinning: false,
+    enableColumnPinning: true,
     enableFacetedValues: false,
     enableRowActions: false,
-    enableRowSelection: false,
+    enableRowSelection: true,
+
+    // code for pinning
+    initialState: {
+      showColumnFilters: true,
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-expand', 'mrt-row-select'],
+        // right: ['mrt-row-actions'],
+      },
+    },
+
     enableHiding: false,
     enableDensityToggle: false,
     enableFullScreenToggle: false,
