@@ -11,6 +11,13 @@ import {
   FormControlLabel,
   Skeleton,
   Tooltip,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Stack,
   
 } from '@mui/material';
 import { MonitorHeart, RadioButtonChecked } from '@mui/icons-material';
@@ -24,6 +31,23 @@ poppinsLink.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;50
 document.head.appendChild(poppinsLink);
 
 const POPPINS = "'Poppins', sans-serif";
+
+
+const thStyle = {
+  textAlign: 'left',
+  padding: '10px 12px',
+  fontSize: '0.75rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  fontWeight: 700,
+  borderBottom: '1px solid #ddd',
+};
+
+const tdStyle = {
+  padding: '10px 12px',
+  fontSize: '0.85rem',
+  borderBottom: '1px solid #eee',
+};
 
 const ADVANCED_ONLY_COLS = ['PID_startTime', 'agentCertExpiry'];
 
@@ -59,6 +83,9 @@ const Example = () => {
   const [advancedMode, setAdvancedMode] = useState(false);
 const [loadingAdvanced, setLoadingAdvanced] = useState(false);
 
+const [openActivate, setOpenActivate] = useState(false);
+const [openDeactivate, setOpenDeactivate] = useState(false);
+
 
  const handleAdvancedToggle = () => {
   if (!advancedMode) {
@@ -73,6 +100,33 @@ const [loadingAdvanced, setLoadingAdvanced] = useState(false);
     // Turning OFF
     setAdvancedMode(false);
   }
+};
+
+
+const handleActivate = () => {
+  setOpenActivate(false);
+  console.log('Activated selected rows');
+};
+
+const handleDeactivate = () => {
+  setOpenDeactivate(false);
+  console.log('Deactivated selected rows');
+};
+
+const handleExport = () => {
+  const selectedRows = table.getSelectedRowModel().rows;
+  const exportData = selectedRows.map(row => row.original);
+  console.log('Exporting:', exportData);
+
+  // simple JSON download
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: 'application/json',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mule-machines-export.json';
+  a.click();
 };
 
   const columns = useMemo<MRT_ColumnDef<mule_Machine>[]>(() => {
@@ -307,16 +361,44 @@ const [loadingAdvanced, setLoadingAdvanced] = useState(false);
           Mule Machine Dashboard
         </Typography>
 
-          <FormControlLabel
-  control={
-    <Switch
-      checked={advancedMode}
-      onChange={handleAdvancedToggle}
-      color="secondary"
-    />
-  }
-  label="Advanced Monitoring"
-/>
+          <Stack direction="row" spacing={2}>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={handleExport}
+      >
+        Export
+      </Button>
+
+      <Button
+        variant="contained"
+        color="success"
+        disabled={!table.getIsSomeRowsSelected()}
+        onClick={() => setOpenActivate(true)}
+      >
+        Activate
+      </Button>
+
+      <Button
+        variant="contained"
+        color="error"
+        disabled={!table.getIsSomeRowsSelected()}
+        onClick={() => setOpenDeactivate(true)}
+      >
+        Deactivate
+      </Button>
+
+      <FormControlLabel
+        control={
+          <Switch
+            checked={advancedMode}
+            onChange={handleAdvancedToggle}
+            color="secondary"
+          />
+        }
+        label="Advanced Monitoring"
+      />
+    </Stack>
       </Box>
     ),
 
@@ -351,8 +433,12 @@ const [loadingAdvanced, setLoadingAdvanced] = useState(false);
          fontFamily: 'Poppins, sans-serif',
         backgroundColor: 'transparent !important',
         '&[data-pinned="true"]': {
-          backgroundColor: 'transparent !important',
-          backdropFilter: 'none',
+          position: 'sticky',
+          zIndex:5,
+          
+          // backgroundColor: 'rgba(8,18,70,0.85) !important',
+           backdropFilter: 'blur(10px)',
+      boxShadow: '2px 0 6px rgba(0,0,0,0.2)',
         },
         color: '#ffffff',
         fontWeight: 700,
@@ -398,34 +484,54 @@ muiTableBodyRowProps: ({ row }) => ({
     // Applications detail panel
     renderDetailPanel: ({ row }) => (
       <Box sx={{ p: 2 }}>
-        <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 700, color: '#90caf9' }}>
+        {/* <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 700, color: '#90caf9' }}>
           Applications on {row.original.server}
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-          {row.original.applications.map((app, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                border: '1px solid',
-                borderColor: app.status ? '#388e3c' : '#c62828',
-                borderRadius: '8px',
-                p: '10px 16px',
-                minWidth: 220,
-                backgroundColor: app.status ? '#1b5e2015' : '#b71c1c15',
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <StatusChip value={app.status} />
-                <Typography sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem' }}>
-                  {app.name}
-                </Typography>
-              </Box>
-              <Typography variant="caption" sx={{ color: '#78909c' }}>
-                Last deployed: {new Date(app.lastDeployed).toLocaleString()}
-              </Typography>
-            </Box>
-          ))}
+        </Typography> */}
+          <Box
+      component="table"
+      sx={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        fontFamily: POPPINS,
+      }}
+    >
+      <Box component="thead">
+        <Box component="tr" sx={{ backgroundColor: '#f5f5f5' }}>
+          <Box component="th" sx={thStyle}>Application</Box>
+          <Box component="th" sx={thStyle}>Status</Box>
+          <Box component="th" sx={thStyle}>Last Deployed</Box>
         </Box>
+      </Box>
+
+      <Box component="tbody">
+        {row.original.applications.map((app, idx) => (
+          <Box
+            component="tr"
+            key={idx}
+            sx={{
+              '&:nth-of-type(even)': {
+                backgroundColor: '#fafafa',
+              },
+              '&:hover': {
+                backgroundColor: '#e3f2fd',
+              },
+            }}
+          >
+            <Box component="td" sx={tdStyle}>
+              {app.name}
+            </Box>
+
+            <Box component="td" sx={tdStyle}>
+              <StatusChip value={app.status} />
+            </Box>
+
+            <Box component="td" sx={tdStyle}>
+              {new Date(app.lastDeployed).toLocaleString()}
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </Box>
       </Box>
     ),
   });
